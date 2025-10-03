@@ -5,7 +5,7 @@ from pathlib import Path
 from ultralytics import YOLO
 from collections import defaultdict
 
-model_path = Path(__file__).parent.parent / 'models' / 'yolov8s.pt'
+model_path = Path(__file__).parent.parent / 'models' / 'yolov8n.pt'
 
 # Loading model
 model = YOLO(model_path)
@@ -49,6 +49,13 @@ while cap.isOpened():
                 cv2.line(frame, points[i-1], points[i], (0, 255, 0), 2)
         
         person_count = len(track_ids)
+        
+        # Clean up the history of tracking IDs that no longer exist (to avoid memory accumulation)
+        current_track_ids = set(track_ids)
+        old_track_ids = set(track_history.keys()) - current_track_ids
+        for old_id in old_track_ids:
+            if old_id in track_history:
+                del track_history[old_id]
     else:
         person_count = 0
     
@@ -56,7 +63,7 @@ while cap.isOpened():
     annotated_frame = results[0].plot()
     
     # Show the number of people
-    cv2.putText(annotated_frame, f'People: {person_count}', 
+    cv2.putText(annotated_frame, f'Total: {person_count}', 
                 (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 
                 1.5, (0, 255, 0), 3)
     
